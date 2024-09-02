@@ -5,23 +5,18 @@ import re
 
 def pridobi_podatke_igralcev(html_datoteka):
     try:
-        # Poskusi prebrati datoteko z utf-8-sig kodiranjem
         with open(html_datoteka, 'r', encoding='utf-8-sig') as datoteka:
             vsebina = datoteka.read()
     except UnicodeDecodeError:
         try:
-            # Če utf-8-sig ne uspe, poskusi z utf-8
             with open(html_datoteka, 'r', encoding='utf-8') as datoteka:
                 vsebina = datoteka.read()
         except UnicodeDecodeError:
-            # Če oba ne uspeta, poskusi z latin-1
             with open(html_datoteka, 'r', encoding='latin-1') as datoteka:
                 vsebina = datoteka.read()
     
-    # Ustvari BeautifulSoup objekt
     soup = BeautifulSoup(vsebina, 'html.parser')
     
-    # Najdi vse vrstice tabele
     vrstice = soup.find_all('tr')
     
     if not vrstice:
@@ -34,13 +29,13 @@ def pridobi_podatke_igralcev(html_datoteka):
         else:
             print("Ni najdenih <table> elementov.")
             print("HTML struktura:")
-            print(soup.prettify()[:1000])  # Izpiši prvih 1000 znakov polepšanega HTML-ja
+            print(soup.prettify()[:1000])  
         return None
 
     podatki_igralcev = []
     for vrstica in vrstice:
         stolpcki = vrstica.find_all(['th', 'td'])
-        if len(stolpcki) > 1:  # Ensure it's a data row
+        if len(stolpcki) > 1:  
             posamezni_igralec_podatki = {
                 'Igralec': stolpcki[1].text.strip() if len(stolpcki) > 1 else '',
                 'Nacionalnost': nacionalnost_enkrat(stolpcki[2].text.strip()) if len(stolpcki) > 2 else '',
@@ -59,27 +54,21 @@ def pridobi_podatke_igralcev(html_datoteka):
             
             podatki_igralcev.append(posamezni_igralec_podatki)
     
-    # Create a DataFrame
     df = pd.DataFrame(podatki_igralcev)
     
     return df
 
 def nacionalnost_enkrat(nacionalnost):
-    # Odstrani vse male črke
     return re.sub(r'[a-z]', '', nacionalnost).strip()
 
-# Pot do vaše HTML datoteke
 pot_html_datoteke = 'lista_fuzbalerckou/usi.html'
 
 try:
-    # Pridobi podatke
     statistika_igralcev = pridobi_podatke_igralcev(pot_html_datoteke)
 
     if statistika_igralcev is not None:
-        # Prikaži prvih nekaj vrstic DataFrame-a
         print(statistika_igralcev.head())
 
-        # Po želji shrani v CSV datoteko
         statistika_igralcev.to_csv('statistika_igralcev.csv', index=False, encoding='utf-8-sig')
         print("Podatki uspešno pridobljeni in shranjeni v 'statistika_igralcev.csv'")
     else:
